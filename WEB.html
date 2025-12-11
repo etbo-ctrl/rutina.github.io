@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rutina - Clean Design (Actualizada)</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#0066ff;
+      --accent-2:#06b6d4;
+      --glass: rgba(255,255,255,0.65);
+      --radius:12px;
+      --shadow: 0 6px 18px rgba(15,23,42,0.08);
+      --gap:18px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color-scheme: light;
+    }
+    body.dark {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --muted: #a1a1aa;
+      --accent: #0ea5e9;
+      --accent-2: #06b6d4;
+      --glass: rgba(255,255,255,0.1);
+      color: #f1f5f9;
+      background: linear-gradient(180deg, #0f172a, #1e293b 100%);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,var(--bg),#eef2ff 100%);
+      padding:32px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      color:#0f172a;
+      line-height:1.4;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container{ max-width:980px; margin:0 auto }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px }
+    h1{ font-size:1.4rem; margin:0 }
+    p.lead{ margin:0; color:var(--muted); font-size:0.95rem }
+
+    .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap) }
+    .card{ background:var(--card); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px; min-height:260px; transition: background 0.3s, color 0.3s }
+    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px }
+    .day-title{ display:flex; gap:10px; align-items:center }
+    .day-badge{ background:linear-gradient(135deg,var(--accent),#003bb3); color:white; padding:8px 10px; border-radius:10px; font-weight:600; font-size:0.85rem }
+    .meta{ color:var(--muted); font-size:0.85rem }
+
+    ul.ex{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px }
+    ul.ex li{ display:flex; align-items:flex-start; gap:10px; padding:8px; border-radius:10px; transition:background .14s, transform .14s }
+    ul.ex li:hover{ background:rgba(2,6,23,0.03); transform:translateY(-3px) }
+
+    .ex-index{ min-width:34px; height:34px; border-radius:8px; background:var(--glass); display:grid; place-items:center; font-weight:700; color:var(--muted); font-size:0.85rem }
+    .ex-body{ display:flex; flex-direction:column; gap:3px }
+    .ex-name{ font-weight:700 }
+    .ex-sub{ color:var(--muted); font-size:0.85rem }
+    .ex-pres{ color:#0b6; font-size:0.85rem; font-weight:600 }
+
+    .core{ margin-top:8px; padding-top:8px; border-top:1px dashed #eef2ff; color:var(--muted); font-size:0.9rem; transition: color 0.3s }
+
+    footer.actions{ display:flex; gap:8px; margin-top:auto }
+    .btn{ border:0; padding:8px 12px; border-radius:10px; cursor:pointer; background:transparent; font-weight:600; font-size:0.9rem }
+    .btn.primary{ background:linear-gradient(90deg,var(--accent),#0057d9); color:white; box-shadow:0 6px 14px rgba(3,102,214,0.12) }
+    .btn.ghost{ color:var(--muted) }
+
+    .note{ font-size:0.85rem; color:var(--muted); transition: color 0.3s }
+
+    @media (max-width:920px){ .grid{ grid-template-columns:repeat(2,1fr) } }
+    @media (max-width:640px){ body{ padding:18px } .grid{ grid-template-columns:1fr } header{ flex-direction:column; align-items:flex-start; gap:8px } }
+    @media (print){ body{ background:white; color:black } .card{ box-shadow:none; border:1px solid #eee } }
+
+    /* Estilo botón modo oscuro */
+    #darkModeToggle{
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 28px;
+      border-radius: 14px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: background 0.3s, justify-content 0.3s;
+      z-index: 9999;
+    }
+    #darkModeToggle div{
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #0066ff;
+      transition: all 0.3s;
+    }
+
+    /* Tarjetas ocupan toda la pantalla en pantallas muy grandes */
+    @media (min-width: 1400px) {
+      .grid {
+        grid-template-columns: 1fr !important;
+        max-width: 100%;
+        gap: 24px;
+        padding: 0 32px;
+      }
+      .card {
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Botón modo oscuro -->
+  <button id="darkModeToggle" aria-label="Cambiar modo">
+    <div></div>
+  </button>
+
+  <div class="container" role="main">
+    <header>
+      <div>
+        <h1>Rutina semanal — Clean Design (Actualizada)</h1>
+        <p class="lead">3 días orientados a pádel — ahora con series/repeticiones e intensidad recomendada.</p>
+      </div>
+      <div aria-hidden="true">
+        <div style="text-align:right; color:var(--muted); font-size:0.9rem">Objetivo: Fuerza · Potencia · Agilidad · Prevención</div>
+      </div>
+    </header>
+
+    <section class="grid" aria-label="Rutina por día">
+
+      <!-- Día 1 -->
+      <article class="card" aria-labelledby="d1">
+        <div class="top">
+          <div class="day-title">
+            <div class="day-badge">Día 1</div>
+            <div>
+              <div id="d1" style="font-weight:700">Lunes — Tren Inferior</div>
+              <div class="meta">Fuerza y explosividad (enfocado a pádel)</div>
+            </div>
+          </div>
+          <div class="meta">Prioridad: piernas</div>
+        </div>
+
+        <ul class="ex" aria-label="Ejercicios día 1">
+          <li><div class="ex-index">1</div><div class="ex-body"><div class="ex-name">Sentadilla (Squat)</div><div class="ex-sub">Objetivo: fuerza de piernas</div><div class="ex-pres">Series/Reps: 4–5 x 4–6 (intensidad: pesada — 80–90% 1RM). Descanso: 2–3 min.</div></div></li>
+          <li><div class="ex-index">2</div><div class="ex-body"><div class="ex-name">Zancada Búlgara (Bulgarian Split Squat)</div><div class="ex-sub">Unilateral — estabilidad y fuerza</div><div class="ex-pres">Series/Reps: 3–4 x 6–8 por pierna (intensidad: moderada-alta). Descanso: 90–120s.</div></div></li>
+          <li><div class="ex-index">3</div><div class="ex-body"><div class="ex-name">Curl Femoral (Extensiones de Isquio)</div><div class="ex-sub">Fortalece isquiosurales — sustituto del RDL</div><div class="ex-pres">Series/Reps: 3–4 x 8–12 (intensidad: moderada). Descanso: 60–90s.</div></div></li>
+          <li><div class="ex-index">4</div><div class="ex-body"><div class="ex-name">Salto al Cajón (Box Jump)</div><div class="ex-sub">Explosividad — trabajo pliométrico</div><div class="ex-pres">Series/Reps: 3 x 4–6 saltos controlados. Descanso: 90–120s.</div></div></li>
+        </ul>
+
+        <div class="core"><strong>Core:</strong> Plancha — 3 x 30–45s por lado (intensidad: mantenida)</div>
+
+        <div class="note">Nota: calienta 8–12 minutos (movilidad dinámica + activación glútea). Para fuerza pesada prioriza técnica y progresión semanal.</div>
+
+        <footer class="actions" aria-hidden="true">
+          <button class="btn ghost">Editar</button>
+          <button class="btn primary">Marcar hecho</button>
+        </footer>
+      </article>
+
+      <!-- Día 2 -->
+      <article class="card" aria-labelledby="d2">
+        <div class="top">
+          <div class="day-title">
+            <div class="day-badge">Día 2</div>
+            <div>
+              <div id="d2" style="font-weight:700">Miércoles — Tren Superior</div>
+              <div class="meta">Fuerza y prevención de lesiones</div>
+            </div>
+          </div>
+          <div class="meta">Prioridad: empuje/tirón y salud del hombro</div>
+        </div>
+
+        <ul class="ex" aria-label="Ejercicios día 2">
+          <li><div class="ex-index">1</div><div class="ex-body"><div class="ex-name">Press de Banca o Press Militar</div><div class="ex-sub">Alterna según objetivo: pecho (banca) o hombro (militar)</div><div class="ex-pres">Series/Reps: 4 x 4–6 (si busca fuerza) o 3 x 8–10 (si busca resistencia/hipertrofia). Descanso: 2–3 min (fuerza) / 60–90s (resistencia).</div></div></li>
+          <li><div class="ex-index">2</div><div class="ex-body"><div class="ex-name">Remo con Barra o Mancuernas</div><div class="ex-sub">Fuerza de tirón — equilibrio posterior</div><div class="ex-pres">Series/Reps: 4 x 6–8. Descanso: 90–120s.</div></div></li>
+          <li><div class="ex-index">3</div><div class="ex-body"><div class="ex-name">Face Pull / Rotación Externa</div><div class="ex-sub">Prevención de hombro y salud escapular</div><div class="ex-pres">Series/Reps: 3 x 12–15 (intensidad ligera-moderada). Descanso: 60s.</div></div></li>
+          <li><div class="ex-index">4</div><div class="ex-body"><div class="ex-name">Elevaciones Laterales</div><div class="ex-sub">Aislamiento del deltoides</div><div class="ex-pres">3 x 12–15. Descanso: 45–60s.</div></div></li>
+        </ul>
+
+        <div class="core"><strong>Core:</strong> Plancha — 3 x 30–45s por lado (intensidad: mantenida)</div>
+
+        <div class="note">Nota: incorpora trabajo de movilidad de hombro después del entrenamiento; evita cargas máximas si tienes molestias en el hombro.</div>
+
+        <footer class="actions" aria-hidden="true">
+          <button class="btn ghost">Editar</button>
+          <button class="btn primary">Marcar hecho</button>
+        </footer>
+      </article>
+
+      <!-- Día 3 -->
+      <article class="card" aria-labelledby="d3">
+        <div class="top">
+          <div class="day-title">
+            <div class="day-badge">Día 3</div>
+            <div>
+              <div id="d3" style="font-weight:700">Jueves — Potencia y Agilidad</div>
+              <div class="meta">Circuito de alta intensidad orientado a pádel</div>
+            </div>
+          </div>
+          <div class="meta">Prioridad: potencia / desplazamientos</div>
+        </div>
+
+        <ul class="ex" aria-label="Ejercicios día 3">
+          <li><div class="ex-index">1</div><div class="ex-body"><div class="ex-name">Burpees</div><div class="ex-sub">Cardio + fuerza total</div><div class="ex-pres">Formato circuito: 3 rondas x 10–12 repeticiones. Descanso entre ejercicios: 15–30s; entre rondas: 90–120s.</div></div></li>
+          <li><div class="ex-index">2</div><div class="ex-body"><div class="ex-name">Sentadilla con Salto (Jump Squat)</div><div class="ex-sub">Explosividad de piernas</div><div class="ex-pres">3 x 8–10 (controlando aterrizaje). Descanso: 60–90s.</div></div></li>
+          <li><div class="ex-index">3</div><div class="ex-body"><div class="ex-name">Prensa de Piernas</div><div class="ex-sub">Potencia de tren inferior usando máquina</div><div class="ex-pres">3 x 8–10 repeticiones. Descanso: 60–90s.</div></div></li>
+          <li><div class="ex-index">4</div><div class="ex-body"><div class="ex-name">Remo en Máquina</div><div class="ex-sub">Potencia de espalda y core, velocidad controlada</div><div class="ex-pres">4 series x 20–30m / 30s intensidad alta. Descanso: 60s.</div></div></li>
+        </ul>
+
+        <div class="core"><strong>Core:</strong> Plancha — 3 x 30–45s por lado (intensidad: mantenida)</div>
+
+        <div class="note">Nota: circuito orientado a potencia — prioriza calidad técnica. Si estás muy cargado después de partidos, reduce volumen (2 rondas).</div>
+
+        <footer class="actions" aria-hidden="true">
+          <button class="btn ghost">Editar</button>
+          <button class="btn primary">Marcar hecho</button>
+        </footer>
+      </article>
+
+    </section>
+
+    <section style="margin-top:22px;">
+      <div style="background:var(--card); padding:14px; border-radius:12px; box-shadow:var(--shadow); transition: background 0.3s, color 0.3s">
+        <h2 style="margin:0 0 8px 0">Guía rápida de intensidad y progresión</h2>
+        <ul class="note">
+          <li><strong>Pesada / fuerza:</strong> 4–6 reps, 3–5 series, carga alta (≈80–90% 1RM). Enfócate en técnica y recuperación.</li>
+          <li><strong>Moderada / hipertrofia:</strong> 6–12 reps, 3–4 series, carga media. Ideal para glúteo/cuádriceps e isquios.</li>
+          <li><strong>Explosividad / potencia:</strong> 3–6 reps (saltos/lanzamientos), series cortas, máxima velocidad de ejecución.</li>
+          <li><strong>Resistencia / acondicionamiento:</strong> 10–15+ reps o formato circuito con poco descanso.</li>
+          <li><strong>Progresión semanal:</strong> añade 2.5–5% de carga o 1–2 repeticiones por ejercicio cada semana (o añade una serie) hasta 4 semanas; después descarga 1 semana.</li>
+          <li><strong>Calentamiento:</strong> 8–12 min (movilidad, activación glútea, trabajo de rotador de hombro). Siempre antes de sesiones pesadas o explosivas.</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const toggle = document.getElementById('darkModeToggle');
+    const circle = toggle.querySelector('div');
+
+    toggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      if(document.body.classList.contains('dark')){
+        circle.style.justifySelf = "end";
+      } else {
+        circle.style.justifySelf = "start";
+      }
+    });
+  </script>
+</body>
+</html>
